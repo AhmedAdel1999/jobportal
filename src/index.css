@@ -1,0 +1,90 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body{
+    direction:ltr
+}
+body:lang(ar) {
+    direction: rtl;
+}
+
+::-webkit-scrollbar{
+    height: 7px;
+    width:7px;
+    display: block;
+}
+
+::-webkit-scrollbar-track{
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb{
+    background: #2C6975;
+    border-radius: 5px;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active{
+    -webkit-box-shadow:0 0 0 50px #5aa7a7 inset;
+    -webkit-text-fill-color: #fff;
+    font-size:16px
+}
+.bg-custom-pattern {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' version='1.1' xmlns:xlink='http://www.w3.org/1999/xlink' xmlns:svgjs='http://svgjs.dev/svgjs' width='1440' height='250' preserveAspectRatio='none' viewBox='0 0 1440 250'%3e%3cg mask='url(%26quot%3b%23SvgjsMask1104%26quot%3b)' fill='none'%3e%3crect width='1440' height='250' x='0' y='0' fill='rgba(205%2c 224%2c 201%2c 1)'%3e%3c/rect%3e%3cpath d='M45 250L295 0L611.5 0L361.5 250z' fill='url(%26quot%3b%23SvgjsLinearGradient1105%26quot%3b)'%3e%3c/path%3e%3cpath d='M251.60000000000002 250L501.6 0L735.6 0L485.6 250z' fill='url(%26quot%3b%23SvgjsLinearGradient1105%26quot%3b)'%3e%3c/path%3e%3cpath d='M499.20000000000005 250L749.2 0L1103.2 0L853.2 250z' fill='url(%26quot%3b%23SvgjsLinearGradient1105%26quot%3b)'%3e%3c/path%3e%3cpath d='M744.8000000000001 250L994.8000000000001 0L1318.8000000000002 0L1068.8000000000002 250z' fill='url(%26quot%3b%23SvgjsLinearGradient1105%26quot%3b)'%3e%3c/path%3e%3cpath d='M1397 250L1147 0L1070.5 0L1320.5 250z' fill='url(%26quot%3b%23SvgjsLinearGradient1106%26quot%3b)'%3e%3c/path%3e%3cpath d='M1165.4 250L915.4000000000001 0L601.9000000000001 0L851.9000000000001 250z' fill='url(%26quot%3b%23SvgjsLinearGradient1106%26quot%3b)'%3e%3c/path%3e%3cpath d='M954.8 250L704.8 0L602.8 0L852.8 250z' fill='url(%26quot%3b%23SvgjsLinearGradient1106%26quot%3b)'%3e%3c/path%3e%3cpath d='M711.1999999999999 250L461.19999999999993 0L314.19999999999993 0L564.1999999999999 250z' fill='url(%26quot%3b%23SvgjsLinearGradient1106%26quot%3b)'%3e%3c/path%3e%3cpath d='M1241.695353101055 250L1440 51.695353101054934L1440 250z' fill='url(%26quot%3b%23SvgjsLinearGradient1105%26quot%3b)'%3e%3c/path%3e%3cpath d='M0 250L198.30464689894507 250L 0 51.695353101054934z' fill='url(%26quot%3b%23SvgjsLinearGradient1106%26quot%3b)'%3e%3c/path%3e%3c/g%3e%3cdefs%3e%3cmask id='SvgjsMask1104'%3e%3crect width='1440' height='250' fill='white'%3e%3c/rect%3e%3c/mask%3e%3clinearGradient x1='0%25' y1='100%25' x2='100%25' y2='0%25' id='SvgjsLinearGradient1105'%3e%3cstop stop-color='rgba(169%2c 203%2c 162%2c 1)' offset='0'%3e%3c/stop%3e%3cstop stop-opacity='0' stop-color='rgba(169%2c 203%2c 162%2c 1)' offset='0.66'%3e%3c/stop%3e%3c/linearGradient%3e%3clinearGradient x1='100%25' y1='100%25' x2='0%25' y2='0%25' id='SvgjsLinearGradient1106'%3e%3cstop stop-color='rgba(169%2c 203%2c 162%2c 1)' offset='0'%3e%3c/stop%3e%3cstop stop-opacity='0' stop-color='rgba(169%2c 203%2c 162%2c 1)' offset='0.66'%3e%3c/stop%3e%3c/linearGradient%3e%3c/defs%3e%3c/svg%3e");
+}
+
+@layer components{
+
+    /* navbar styles */
+    .listyle{
+        @apply lg:ml-8 text-lg font-extrabold lg:my-0 my-3
+    } 
+    .navlinkstyle{
+        @apply text-white [&.active]:text-base-active hover:text-base-active duration-500
+    }
+    .toggler{
+        @apply text-3xl absolute ltr:right-8 rtl:left-8 top-4 cursor-pointer lg:hidden
+    }
+    .ulstyle{
+        @apply lg:flex lg:items-center lg:pb-0 absolute lg:static bg-base-4 lg:z-auto z-[-1] ltr:left-0 rtl:right-0 w-[300px] lg:w-auto lg:pl-0 px-9 transition-all duration-500 ease-in
+    }
+
+    /* tableshared styles */
+    .tablestyle{
+        @apply w-full min-w-[950px] overflow-hidden rounded-md border-collapse relative
+    }
+    .tablethstyle{
+        @apply bg-base-4 capitalize text-white p-2 text-center border-x border-y-0 border-solid border-white !important
+    }
+    .tabletrstyle{
+        @apply [&:last-child>td]:border-b [&:nth-child(odd)]:bg-base-2 [&:nth-child(even)]:bg-[#e5f1e3] !important
+    }
+    .tabletdstyle{
+        @apply w-fit p-2 text-center border-x border-y-0 border-solid border-white !important
+    }
+
+    /* modal style */
+    .modalstyle{
+        @apply absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2
+        w-[300px] bg-white rounded-sm shadow-md p-4
+    }
+
+
+    /* input field style */
+    .inputstyle{
+        @apply bg-input-bg text-white border-none focus:outline-none rounded-[4px] p-[7px]
+    }
+    .autocompletestyle{
+        @apply bg-input-bg [&>div>div>div.css-38raov-MuiButtonBase-root-MuiChip-root]:bg-white rounded-[4px]
+    }
+
+    /* general buttons style */
+    .btnstyle{
+        @apply text-white flex items-center w-fit px-4 py-2 rounded-md bg-base-3
+    }
+}
+
