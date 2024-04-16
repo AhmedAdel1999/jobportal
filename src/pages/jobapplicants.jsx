@@ -16,6 +16,7 @@ const JobApplicantsPage = () =>{
     const {id} = useParams()
     const { t } = useTranslation()
     const[applicantStatus,setApplicantStatus]=useState(null)
+    const[applicantID,setApplicantID]=useState(null)
 
 
     const {data:jobData,isPending,error,refetch} = useQuery({queryKey:["getjob",id],queryFn:()=>getSingleJobs(id)})
@@ -28,9 +29,11 @@ const JobApplicantsPage = () =>{
 
     const UpdateTheStatus = (jobId,status) =>{
         setApplicantStatus(status)
+        setApplicantID(jobId)
         updateStatus({id,data:{jobId,status}},{
             onSuccess:()=>{
                 refetch()
+                setApplicantID(null)
             }
         })
     }
@@ -44,7 +47,7 @@ const JobApplicantsPage = () =>{
             cell2:applicant.skills.join(", "),
             cell3:new Date(jobData.data.receivedApplicants[ind].dateOfApplication).toLocaleDateString(),
             cell4:applicant.education[0].institution.toUpperCase(),
-            cell5:jobData.data.receivedApplicants[ind].sop,
+            cell5:(<p className="m-w-[150px] overflow-hidden text-ellipsis text-nowrap">{jobData.data.receivedApplicants[ind].sop}</p>),
             cell6:applicant.rating,
             cell7:jobData.data.receivedApplicants[ind].status,
             cell8:jobData.data.receivedApplicants[ind].status!=="Rejected"?(
@@ -58,7 +61,7 @@ const JobApplicantsPage = () =>{
                             disableElevation
                             onClick={()=>UpdateTheStatus(jobData.data.receivedApplicants[ind]["_id"],"Shortlisted")}
                             startIcon={<FontAwesomeIcon style={{margin:"0px"}} icon={faListCheck} />}
-                            endIcon={(isLoadStatus&&applicantStatus==="Shortlisted")?
+                            endIcon={(isLoadStatus&&applicantID==jobData.data.receivedApplicants[ind]["_id"]&&applicantStatus==="Shortlisted")?
                                 <CircularProgress size={25} color="inherit" />
                                 :
                                 null
@@ -76,7 +79,7 @@ const JobApplicantsPage = () =>{
                             disableElevation
                             onClick={()=>UpdateTheStatus(jobData.data.receivedApplicants[ind]["_id"],"Accepted")}
                             startIcon={<FontAwesomeIcon style={{margin:"0px"}} icon={faCheck} />}
-                            endIcon={(isLoadStatus&&applicantStatus==="Accepted")?
+                            endIcon={(isLoadStatus&&applicantID==jobData.data.receivedApplicants[ind]["_id"]&&applicantStatus==="Accepted")?
                                 <CircularProgress size={25} color="inherit" />
                                 :
                                 null
@@ -94,7 +97,7 @@ const JobApplicantsPage = () =>{
                             disableElevation
                             onClick={()=>UpdateTheStatus(jobData.data.receivedApplicants[ind]["_id"],"Rejected")}
                             startIcon={<FontAwesomeIcon style={{margin:"0px"}} icon={faXmark} />}
-                            endIcon={(isLoadStatus&&applicantStatus==="Rejected")?
+                            endIcon={(isLoadStatus&&applicantID==jobData.data.receivedApplicants[ind]["_id"]&&applicantStatus==="Rejected")?
                                 <CircularProgress size={25} color="inherit" />
                                 :
                                 null

@@ -79,7 +79,7 @@ input:-webkit-autofill:active{
         @apply bg-input-bg text-white border-none focus:outline-none rounded-[4px] p-[7px]
     }
     .autocompletestyle{
-        @apply bg-input-bg [&>div>div>div.css-38raov-MuiButtonBase-root-MuiChip-root]:bg-white rounded-[4px]
+        @apply bg-input-bg [&>div>div>div.css-38raov-MuiButtonBase-root-MuiChip-root]:bg-white rounded-[4px] !important
     }
 
     /* general buttons style */
