@@ -1,5 +1,5 @@
 import React from 'react';
-import App from './App';
+import Landing from './pages/landingpage';
 import { persistQueryClient } from "@tanstack/react-query-persist-client"
 import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister'
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -29,12 +29,15 @@ persistQueryClient({
   persister: localStoragePersistor,
 })
 
+let LazyApp = React.lazy(()=>import("./App"))
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
     <React.StrictMode>
       <QueryClientProvider client={queryClient}> 
       <ToastProvider  placement="top-right" >
-         <App />
+        <React.Suspense fallback={<Landing />}>
+          <LazyApp />
+        </React.Suspense>
       </ToastProvider>
       </QueryClientProvider>
    
