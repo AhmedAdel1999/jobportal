@@ -50,7 +50,7 @@ input:-webkit-autofill:active{
         @apply text-3xl absolute ltr:right-8 rtl:left-8 top-4 cursor-pointer lg:hidden
     }
     .ulstyle{
-        @apply lg:flex lg:items-center lg:pb-0 absolute lg:static bg-base-4 lg:z-auto z-[-1] ltr:left-0 rtl:right-0 w-[300px] lg:w-auto lg:pl-0 px-9 transition-all duration-500 ease-in
+        @apply lg:flex lg:items-center lg:pb-0 absolute lg:static bg-base-4 lg:z-auto z-[-1] ltr:left-0 rtl:right-0 w-[300px] lg:w-auto lg:pl-0 px-9 transition-all duration-200 ease-linear
     }
 
     /* tableshared styles */

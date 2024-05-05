@@ -5,11 +5,12 @@ module.exports = {
   ],
   theme: {
     // screens: {
-    //   'sm': {'min': '0px', 'max': '500px'},
-    //   'md': {'min': '501px', 'max': '768px'},
-    //   'lg': {'min': '769px', 'max': '1024px'},
-    //   'xl': {'min': '1025px', 'max': '1200px'},
-    //   '2xl': {'min': '1201px'},
+    //   "xs":"0px",
+    //   'sm': '650px',
+    //   'md': '990px',
+    //   'lg': '1200px',
+    //   'xl': '1380px',
+    //   '2xl': '1536px',
     // },
     container: {
       center:true,

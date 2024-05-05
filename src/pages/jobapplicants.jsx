@@ -1,10 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Alert,Button,CircularProgress } from "@mui/material";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faListCheck,faCheck,faXmark } from "@fortawesome/free-solid-svg-icons";
-import { useQuery,useMutation } from "@tanstack/react-query";
-import { getSingleJobs,updateJobStatus } from "../serveses/job";
-import { getUsersApplications } from "../serveses/user";
+import { useQuery,useMutation, useQueryClient } from "@tanstack/react-query";
+import { getSingleJob,updateJob } from "../serveses/job";
 import { useParams } from "react-router-dom";
 import Loader from "../components/loding";
 import TableShared from "../components/tableshared";
@@ -12,36 +11,80 @@ import { useTranslation } from "react-i18next";
 
 
 const JobApplicantsPage = () =>{
-
+    
+    const queryClient = useQueryClient()
     const {id} = useParams()
     const { t } = useTranslation()
     const[applicantStatus,setApplicantStatus]=useState(null)
     const[applicantID,setApplicantID]=useState(null)
+    const[jobApplicants,setJobApplicants] = useState([])
+    let currentUserId = JSON.parse(localStorage.getItem("currentUserId"))
 
 
-    const {data:jobData,isPending,error,refetch} = useQuery({queryKey:["getjob",id],queryFn:()=>getSingleJobs(id)})
-   
-    const{data:jobApplicants,isPending:isLoad,error:err}=useQuery({queryKey:["getjobApplicants",id],
-    queryFn:()=>getUsersApplications({applicantIds:jobData.data.receivedApplicants}),enabled:!!jobData
-    })
-    const{mutate:updateStatus,isPending:isLoadStatus}=useMutation({mutationFn:updateJobStatus})
+    const {data:Allusers} = queryClient.getQueriesData({queryKey: ["getusers"]})[0][1]
+    const {data:jobData,isLoading,error,refetch} = useQuery({queryKey:["getjob",id],queryFn:()=>getSingleJob(currentUserId,id)})
+    const{mutate:updateStatus,isPending:isLoadStatus}=useMutation({mutationFn:updateJob})
     
 
-    const UpdateTheStatus = (jobId,status) =>{
+    useEffect(()=>{
+        if(jobData){
+            let applicants=[]
+            jobData.data.receivedApplicants.forEach((item)=>{
+                let users = Allusers.filter((user)=>user.id===item.id)
+                applicants=[...applicants,...users]
+           })
+           setJobApplicants([...applicants])
+       }
+    },[jobData])
+
+    const UpdateTheStatus = (applicantId,status) =>{
+        
+        let updatedApplication = status==="Accepted"?{
+            ...jobData.data.receivedApplicants.filter((ele)=>ele.id===applicantId)[0],
+            status,
+            dateOfJoining:new Date()
+        }:
+        {
+            ...jobData.data.receivedApplicants.filter((ele)=>ele.id===applicantId)[0],
+            status,
+        }
+        let receivedApplicants=jobData.data.receivedApplicants.map((ele)=>{
+            if(ele.id===updatedApplication.id){
+                return updatedApplication;
+            }else{
+                return ele
+            }
+        })
+
+        let handleNoOfAccepted = () =>{
+            if(status==="Accepted"){return (jobData.data.noOfAccepted + 1)}
+            else if(status==="Shortlisted"){return jobData.data.noOfAccepted}
+            else if(status==="Rejected"){
+                return jobData.data.noOfAccepted===0?0:jobData.data.noOfAccepted - 1 
+            }
+        }
         setApplicantStatus(status)
-        setApplicantID(jobId)
-        updateStatus({id,data:{jobId,status}},{
+        setApplicantID(applicantId)
+        updateStatus({
+            userId:jobData.data.userId,
+            jobId:jobData.data.id,
+            data:{
+                ...jobData.data,
+                receivedApplicants,
+                noOfAccepted:handleNoOfAccepted()
+            }},{
             onSuccess:()=>{
                 refetch()
                 setApplicantID(null)
+                setApplicantStatus(null)
             }
         })
     }
 
     const tableHeader = ["app-name","app-skills","app-date","app-education","sop",
-                "rating","soa","options"
+                "employee-rating","soa","options"
     ]
-    const tableBody = jobApplicants?.data.users.map((applicant,ind)=>{
+    const tableBody = jobApplicants?.map((applicant,ind)=>{
         return{
             cell1:applicant.name,
             cell2:applicant.skills.join(", "),
@@ -59,9 +102,9 @@ const JobApplicantsPage = () =>{
                             sx={{background:"#6BB2A0","&:hover":{background:"#6BB2A0"}}}
                             disableRipple
                             disableElevation
-                            onClick={()=>UpdateTheStatus(jobData.data.receivedApplicants[ind]["_id"],"Shortlisted")}
+                            onClick={()=>UpdateTheStatus(jobData.data.receivedApplicants[ind]["id"],"Shortlisted")}
                             startIcon={<FontAwesomeIcon style={{margin:"0px"}} icon={faListCheck} />}
-                            endIcon={(isLoadStatus&&applicantID==jobData.data.receivedApplicants[ind]["_id"]&&applicantStatus==="Shortlisted")?
+                            endIcon={(isLoadStatus&&applicantID==jobData.data.receivedApplicants[ind]["id"]&&applicantStatus==="Shortlisted")?
                                 <CircularProgress size={25} color="inherit" />
                                 :
                                 null
@@ -77,9 +120,9 @@ const JobApplicantsPage = () =>{
                             sx={{background:"#6BB2A0","&:hover":{background:"#6BB2A0"}}}
                             disableRipple
                             disableElevation
-                            onClick={()=>UpdateTheStatus(jobData.data.receivedApplicants[ind]["_id"],"Accepted")}
+                            onClick={()=>UpdateTheStatus(jobData.data.receivedApplicants[ind]["id"],"Accepted")}
                             startIcon={<FontAwesomeIcon style={{margin:"0px"}} icon={faCheck} />}
-                            endIcon={(isLoadStatus&&applicantID==jobData.data.receivedApplicants[ind]["_id"]&&applicantStatus==="Accepted")?
+                            endIcon={(isLoadStatus&&applicantID==jobData.data.receivedApplicants[ind]["id"]&&applicantStatus==="Accepted")?
                                 <CircularProgress size={25} color="inherit" />
                                 :
                                 null
@@ -89,15 +132,16 @@ const JobApplicantsPage = () =>{
                         </Button>
                     }
                     {
-                        jobData.data.receivedApplicants[ind].status!=="Rejected"&&
+                        (jobData.data.receivedApplicants[ind].status!=="Rejected" &&
+                        jobData.data.receivedApplicants[ind].status!=="Accepted")?
                         <Button 
                             variant="contained"
                             sx={{background:"#6BB2A0","&:hover":{background:"#6BB2A0"}}}
                             disableRipple
                             disableElevation
-                            onClick={()=>UpdateTheStatus(jobData.data.receivedApplicants[ind]["_id"],"Rejected")}
+                            onClick={()=>UpdateTheStatus(jobData.data.receivedApplicants[ind]["id"],"Rejected")}
                             startIcon={<FontAwesomeIcon style={{margin:"0px"}} icon={faXmark} />}
-                            endIcon={(isLoadStatus&&applicantID==jobData.data.receivedApplicants[ind]["_id"]&&applicantStatus==="Rejected")?
+                            endIcon={(isLoadStatus&&applicantID==jobData.data.receivedApplicants[ind]["id"]&&applicantStatus==="Rejected")?
                                 <CircularProgress size={25} color="inherit" />
                                 :
                                 null
@@ -105,6 +149,8 @@ const JobApplicantsPage = () =>{
                         >
                             <span className="font-[700] rtl:mx-2">{t("reject")}</span>
                         </Button>
+                        :
+                        <p>{t("accept-no-options")}</p>
                     }
                 </div>
             )
@@ -113,7 +159,7 @@ const JobApplicantsPage = () =>{
         }
     })
     
-    if(isPending || isLoad){
+    if(isLoading){
         return <Loader />
     }
 
@@ -122,8 +168,8 @@ const JobApplicantsPage = () =>{
             <div className="col-[2/span_10] overflow-hidden">
                 <h3 className="text-2xl text-base-4 font-[700] mb-8">{t("all-apps")}</h3>
                 {
-                    (error || err)?
-                    (<Alert sx={{marginBottom:"16px",width:"fit-content"}} severity="error">{error?.message || err?.message}</Alert>):
+                    (error)?
+                    (<Alert sx={{marginBottom:"16px",width:"fit-content"}} severity="error">{error.message}</Alert>):
                     !jobData?.data.receivedApplicants.length?
                     <Alert sx={{marginBottom:"16px",width:"fit-content"}} severity="info">{t("no-apply")}</Alert>
                     :tableBody.length!==0&&

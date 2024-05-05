@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { Box,Autocomplete,TextField,CircularProgress, Alert } from "@mui/material";
 import { langsList } from "../serveses/constants";
-import { useMutation } from "@tanstack/react-query"
-import { userRegister } from "../serveses/auth";
+import { useMutation,useQuery } from "@tanstack/react-query"
+import { getAllUsers, userRegister } from "../serveses/user";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 
 const RegisterPage = () =>{
+
     const[name,setName] = useState({value:"",error:""})
     const[email,setEmail] = useState({value:"",error:""})
     const[role,setRole] = useState("Aplicant")
     const[password,setPassword] = useState({value:"",error:""})
-    const[confirmPassword,setConfirmPassword] = useState({value:"",error:""})
     const[institution,setInstitution]=useState("")
     const[startYear,setStartYear]=useState("")
     const[endYear,setEndYear]=useState("")
@@ -20,7 +20,11 @@ const RegisterPage = () =>{
     const[contact,setContact] = useState({value:"",error:""})
     const[bio,setBio]=useState("")
 
-    const { mutate:AddUser,data,isPending,isSuccess ,error} = useMutation({mutationFn:userRegister})
+    const [loading,setLoading] = useState(false)
+    const [error,setError] = useState(null)
+
+    const { mutate:AddUser,data,isSuccess } = useMutation({mutationFn:userRegister})
+    const {data:AllUsers} = useQuery({queryKey:["getusers"],queryFn:getAllUsers})
     const navigate = useNavigate()
     const { t } = useTranslation()
 
@@ -43,12 +47,7 @@ const RegisterPage = () =>{
         if(!e.target.value){
             setEmail({value:e.target.value,error:`${t("required")}`})
         }else{
-            let regexEmail = /^([0-9a-zA-Z]([-.\w]*[0-9a-zA-Z])*@([0-9a-zA-Z][-\w]*[0-9a-zA-Z]\.)+[a-zA-Z]{2,9})$/;
-            if(!e.target.value.match(regexEmail)){
-                setEmail({value:e.target.value,error:`${t("invalid-email")}`})
-            }else{
-                setEmail({value:e.target.value,error:""})
-            } 
+            setEmail({value:e.target.value,error:""})
         }   
     }
 
@@ -56,26 +55,10 @@ const RegisterPage = () =>{
         if(!e.target.value){
             setPassword({value:e.target.value,error:`${t("required")}`})
         }else{
-            let regexPassword = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[0-9a-zA-Z]{8,}$/;
-            if(!e.target.value.match(regexPassword)){
-                setPassword({value:e.target.value,error:`${t("password-base")}`})
-            }else{
-                setPassword({value:e.target.value,error:""})
-            }
+            setPassword({value:e.target.value,error:""})
         }   
     }
 
-    const handleConfirmPassword = (e) =>{
-        if(!e.target.value){
-            setConfirmPassword({value:e.target.value,error:`${t("required")}`})
-        }else{
-            if(e.target.value!==password.value){
-                setConfirmPassword({value:e.target.value,error:`${t("not-matched")}`})
-            }else{
-                setConfirmPassword({value:e.target.value,error:""})
-            }
-        }   
-    }
 
     const handleContact = (e) =>{
         if(e.target.value.length>10){
@@ -87,17 +70,48 @@ const RegisterPage = () =>{
 
     const handleSubmit = (e) =>{
         e.preventDefault();
-        if(!name.value || !email.value || !password.value || !confirmPassword.value){
+        if(!name.value || !email.value || !password.value){
             if(!name.value){setName({...name,error:`${t("required")}`})}
             if(!email.value){setEmail({...email,error:`${t("required")}`})}
             if(!password.value){setPassword({...password,error:`${t("required")}`})}
-            if(!confirmPassword.value){setConfirmPassword({...confirmPassword,error:`${t("required")}`})}
         }else{
-            AddUser({
-                name:name.value,email:email.value,
-                role,password:password.value,confirmPassword:confirmPassword.value,
-                institution,startYear,endYear,skills,contact:contact.value,bio
-            })
+            setLoading(true)
+            let users = AllUsers.data
+            let isExist=false
+            try{
+              if(users.length>0){
+                  for(let i=0; i<users.length; i++){
+                    if(users[i].email===email.value){
+                      isExist = true
+                      throw new Error("This User Is Already Registered");
+                    }
+                  }
+        
+                  if(!isExist){
+                    AddUser({
+                        name:name.value,email:email.value,
+                        role,password:password.value,
+                        education:role==="Aplicant"?[{institution,startYear,endYear}]:[],
+                        skills,contact:contact.value,bio,rating:0
+                    },{
+                        onSuccess:()=>setLoading(false)
+                    })
+                  }
+                
+              }else{
+                AddUser({
+                    name:name.value,email:email.value,
+                    role,password:password.value,
+                    education:role==="Aplicant"?[{institution,startYear,endYear}]:[],
+                    skills,contact:contact.value,bio,rating:0
+                },{
+                    onSuccess:()=>setLoading(false)
+                })
+              }
+            }catch(error) {
+              setError(error.message)
+              setLoading(false)
+            }
         }
     }
 
@@ -107,7 +121,7 @@ const RegisterPage = () =>{
                 <h1 className="font-extrabold text-3xl text-base-4 mb-6">{t("register")}</h1>
                 {
                     error&&
-                    <Alert sx={{marginBottom:"10px",width:"fit-content"}} severity="error">{error.response.data.userError}</Alert>
+                    <Alert sx={{marginBottom:"10px",width:"fit-content"}} severity="error">{error}</Alert>
                 }
                 <form onSubmit={handleSubmit} className="flex flex-col gap-y-3 pb-5">
                     <div className="flex flex-col gap-y-[5px]">
@@ -162,18 +176,6 @@ const RegisterPage = () =>{
                         }
                     </div>
 
-
-                    <div className="flex flex-col gap-y-[5px]">
-                        <label className="capitalize text-base text-base-4 font-bold">{t("confirm-password")}:</label>
-                        <input 
-                          className="inputstyle" 
-                          type="password" value={confirmPassword.value} onChange={handleConfirmPassword} 
-                        />
-                        {
-                            confirmPassword.error&&
-                            <span className="text-white">{confirmPassword.error}</span>
-                        }
-                    </div>
 
                     {
                         role==="Aplicant"?
@@ -259,7 +261,7 @@ const RegisterPage = () =>{
                     >
                         <span className="mx-2">{t("register")}</span>
                         {
-                            isPending&&
+                            loading&&
                             <CircularProgress size={25} color="inherit" />
                         }
                     </button>

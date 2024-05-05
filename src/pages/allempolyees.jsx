@@ -1,35 +1,34 @@
 import { useRef, useState } from "react"
-import { useMutation, useQuery,useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery } from "@tanstack/react-query"
 import { Alert, Button, Modal, CircularProgress } from "@mui/material"
 import { getAllJobs } from "../serveses/job"
 import Loader from "../components/loding"
 import TableShared from "../components/tableshared"
-import { UpdateUser, getAllUser } from "../serveses/user"
+import { UpdateUser, getAllUsers } from "../serveses/user"
 import { useTranslation } from "react-i18next";
 
 const AllEmpolyees = () =>{
 
+    const currentUserId = JSON.parse(localStorage.getItem("currentUserId"))
     const[isOpen,setISOpen]=useState(false)
     const[applicantId,setApplicantId]=useState(null)
     const employeeRate=useRef(0)
 
-    const queryClient = useQueryClient()
     const { t } = useTranslation();
-    const {data:userdata}=queryClient.getQueryData(["getuser"])
-    const {data:AllJobs,isPending,error} = useQuery({queryKey:["alljobs"],queryFn:getAllJobs})
-    const {data:AllUsers,refetch} = useQuery({queryKey:["allusers"],queryFn:getAllUser})
+    const {data:AllJobs,isLoading:LoadJobs,error} = useQuery({queryKey:["getalljobs"],queryFn:getAllJobs})
+    const {data:AllUsers,isLoading:LoadUsers,refetch} = useQuery({queryKey:["getusers"],queryFn:getAllUsers})
     const {mutate:RateApplicant,isPending:isLoad,error:err} = useMutation({mutationFn:UpdateUser})
-    const myOwnApplicantedJobs = AllJobs&&AllJobs.data.filter((job)=>job.email===userdata.email&&job.receivedApplicants.length!=0);
+    const myOwnApplicantedJobs = AllJobs&&AllJobs.data.filter((job)=>job.userId===currentUserId&&job.receivedApplicants.length!=0);
     const AllJobAcceptedApplicants=[];
     
 
     (
         function(){
             myOwnApplicantedJobs?.forEach((job)=>{{
-                job.receivedApplicants.forEach(async(ele)=>{
+                job.receivedApplicants.forEach((ele)=>{
                     
                 if(ele.status==="Accepted"){
-                    let applicant = AllUsers?.data.filter((user)=>user._id==ele._id)[0]
+                    let applicant = AllUsers?.data.filter((user)=>user.id==ele.id)[0]
                     AllJobAcceptedApplicants.push(
                         {
                             typeOfJob:job.typeOfJob,
@@ -37,7 +36,7 @@ const AllEmpolyees = () =>{
                             dateOfJoining:ele.dateOfJoining,
                             rating:applicant?.rating&&(applicant?.rating).toFixed(2),
                             name:applicant?.name,
-                            _id:ele._id
+                            id:ele.id
                         }
                     )
                 }
@@ -48,7 +47,13 @@ const AllEmpolyees = () =>{
 
     const handleRate = (e) =>{
        e.preventDefault();
-       RateApplicant({userId:applicantId,data:{rating:employeeRate.current.value}},{
+       const currentApplicant = AllUsers?.data.filter((user)=>user.id===applicantId)[0]
+       RateApplicant({
+        userId:applicantId,
+        data:{
+            ...currentApplicant,
+            rating:(Number(currentApplicant.rating)+Number(employeeRate.current.value))/2
+        }},{
         onSuccess:()=>{
             setISOpen(false)
             refetch()
@@ -58,7 +63,7 @@ const AllEmpolyees = () =>{
     
     const tableHeader =[
         "employee-name","joining-date","job-type","job-title",
-        "rating","employee-rate"
+        "employee-rating","employee-rate"
     ]
     const tableBody=AllJobAcceptedApplicants.map((ele)=>{
         return{
@@ -76,13 +81,13 @@ const AllEmpolyees = () =>{
                     disableElevation
                     onClick={()=>{
                         setISOpen(true)
-                        setApplicantId(ele._id)
+                        setApplicantId(ele.id)
                     }}
                 >
                    <span className="font-[700] text-lg">{t("rate")}</span>
                 </Button>
                 <Modal
-                    open={isOpen&&ele._id===applicantId}
+                    open={isOpen&&ele.id===applicantId}
                     onClose={()=>{setISOpen(false)}}
                 >
                   <div
@@ -117,7 +122,7 @@ const AllEmpolyees = () =>{
         }
     })
 
-    if(isPending){
+    if(LoadJobs || LoadUsers){
         return <Loader />
     }
     return(
@@ -135,7 +140,6 @@ const AllEmpolyees = () =>{
                 <Alert sx={{width:"fit-content"}} severity="info">{t("no-employees")}</Alert>
                }
             </div>
-            
         </div>
     )
 }

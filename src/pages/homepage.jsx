@@ -1,4 +1,4 @@
-import bgImg from "../assets/bg_1.jpg"
+import bgImg from "../assets/cover.png"
 import { Fade } from "react-reveal"
 import { useTranslation } from "react-i18next";
 const HomePage = () =>{
@@ -8,11 +8,11 @@ const HomePage = () =>{
     return(
         <div 
             style={{backgroundImage:`url(${bgImg})`}}
-            className={`h-full bg-no-repeat bg-cover bg-center flex justify-center items-center `}
+            className={`h-full bg-no-repeat bg-cover bg-center pt-16  px-8`}
         >
-            <div className="max-w-[700px] min-w-[300px] px-4">
+            <section className="flex flex-col h-full max-w-[700px] justify-center gap-4">
                 <Fade top>
-                  <p className="relative z-0 font-extrabold italic text-center text-white text-4xl ">
+                  <p className="relative z-0 font-extrabold italic text-center text-white text-4xl">
                      {t("welcome-header")}
                   </p>
                 </Fade>
@@ -22,7 +22,7 @@ const HomePage = () =>{
                        {t("welcome-text")}
                     </p>
                 </Fade>
-            </div>
+            </section>
         </div>
     )
 }

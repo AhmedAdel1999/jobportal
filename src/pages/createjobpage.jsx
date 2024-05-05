@@ -11,17 +11,18 @@ const CreateJobPage = () =>{
 
     const [newjob,setNewJob] = useState({
         title:{value:"",error:""},
-        maxApps:{value:"",error:""},
-        maxPos:{value:"",error:""},
+        maxApplicants:{value:"",error:""},
+        maxPositions:{value:"",error:""},
         deadline:{value:"",error:""},
         skills:{value:[],error:""},
-        jobType:{value:"",error:""},
+        typeOfJob:{value:"",error:""},
         duration:{value:"",error:""},
         salary:{value:"",error:""},
     })
     const queryClient = useQueryClient()
     const { t } = useTranslation();
-    const userdata = queryClient.getQueryData(["getuser"])
+    const userdata = queryClient.getQueriesData({queryKey:["getuser"]})[0][1]
+    
     const navigate = useNavigate()
     const { addToast:notify } = useToasts()
     const{ mutate:AddNewJob,isPending,error,isSuccess} = useMutation({mutationFn:createNewJob})
@@ -53,9 +54,9 @@ const CreateJobPage = () =>{
     const onSubmit = (e) =>{
         e.preventDefault()
         if(
-            !newjob.deadline.value||!newjob.duration.value ||!newjob.maxApps.value||
-            !newjob.maxPos.value||!newjob.salary.value||!newjob.skills.value.length||
-            !newjob.title.value||!newjob.jobType.value
+            !newjob.deadline.value||!newjob.duration.value ||!newjob.maxApplicants.value||
+            !newjob.maxPositions.value||!newjob.salary.value||!newjob.skills.value.length||
+            !newjob.title.value||!newjob.typeOfJob.value
          ){  
             let obj={...newjob}
              for(let key in newjob){
@@ -70,10 +71,19 @@ const CreateJobPage = () =>{
                 obj={...obj,[key]:newjob[key].value}
              }
              AddNewJob({
-                ...obj,
-                email:userdata.data.email,
-                name:userdata.data.name,
-                dateOfPosting:Date.parse(new Date())
+                
+                data:{
+                    ...obj,
+                    salary:Number(obj.salary),
+                    maxApplicants:Number(obj.maxApplicants),
+                    maxPositions:Number(obj.maxPositions),
+                    rating:0,
+                    noOfAccepted:0,
+                    email:userdata.data.email,
+                    name:userdata.data.name,
+                    dateOfPosting:new Date()
+                },
+                userId:userdata.data.id
              })
          }
     }
@@ -97,14 +107,14 @@ const CreateJobPage = () =>{
 
                     <div className="flex flex-col gap-y-1">
                         <label className=" capitalize text-base text-base-4 font-bold">{t("max-no-apps")}</label>
-                        <input name="maxApps" onChange={(e)=>handleInputChange(e)} className="inputstyle" type="number" />
-                        {newjob.maxApps.error&&<span className="text-white capitalize">{newjob.maxApps.error}</span>}
+                        <input name="maxApplicants" onChange={(e)=>handleInputChange(e)} className="inputstyle" type="number" />
+                        {newjob.maxApplicants.error&&<span className="text-white capitalize">{newjob.maxApplicants.error}</span>}
                     </div>
 
                     <div className="flex flex-col gap-y-1">
                         <label className=" capitalize text-base text-base-4 font-bold">{t("max-no-available")}</label>
-                        <input name="maxPos" onChange={(e)=>handleInputChange(e)} className="inputstyle" type="number" />
-                        {newjob.maxPos.error&&<span className="text-white capitalize">{newjob.maxPos.error}</span>}
+                        <input name="maxPositions" onChange={(e)=>handleInputChange(e)} className="inputstyle" type="number" />
+                        {newjob.maxPositions.error&&<span className="text-white capitalize">{newjob.maxPositions.error}</span>}
                     </div>
 
                     <div className="flex flex-col gap-y-1">
@@ -140,7 +150,7 @@ const CreateJobPage = () =>{
                             className="autocompletestyle [&>div>div>input.css-nxo287-MuiInputBase-input-MuiOutlinedInput-input]:text-white"
                             options={["Full-time","Part-time","Work From Home"]}
                             onChange={(_event,newValue) => {
-                                handleInputChange({target:{name:"jobType",value:newValue}})
+                                handleInputChange({target:{name:"typeOfJob",value:newValue}})
                             }}
                             renderInput={(params) => 
                             (<TextField 
@@ -151,7 +161,7 @@ const CreateJobPage = () =>{
                                 </Box>
                             )}
                         />
-                        {newjob.jobType.error&&<span className="text-white capitalize">{newjob.jobType.error}</span>}
+                        {newjob.typeOfJob.error&&<span className="text-white capitalize">{newjob.typeOfJob.error}</span>}
                     </div>
 
                     <div className="flex flex-col gap-y-1">

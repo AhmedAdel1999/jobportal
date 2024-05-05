@@ -36,7 +36,8 @@ const NavbarSection = () =>{
     const { t } = useTranslation();
     const queryClient = useQueryClient()
     const{setIsLoggedIn} = useContext(AuthContext)
-    const data=queryClient.getQueryData(["getuser"])
+    const data=queryClient.getQueriesData({queryKey:["getuser"]})[0]
+    let currentUserData = data?data[1]:undefined
     let currentLang = JSON.parse(localStorage.getItem("lang")) || lang;
 
 
@@ -50,12 +51,12 @@ const NavbarSection = () =>{
       };
 
     
-    const handleLogout = () =>{
+    const handleLogout = async () =>{
+        await queryClient.removeQueries()
+        localStorage.removeItem("currentUserId") 
         setIsLoggedIn(false)
         setOpensidebar(false)
-        localStorage.removeItem("token")
-        //queryClient.removeQueries("getuser")
-        queryClient.removeQueries()
+               
     }
 
     const handleClose = () =>{
@@ -80,8 +81,8 @@ const NavbarSection = () =>{
 
 
     const handleRoutes = () =>{
-        if(data){
-             if(data.data.role=="Aplicant"){
+        if(currentUserData){
+             if(currentUserData.data.role=="Aplicant"){
                 return(
                     <React.Fragment>
                         <li className='listyle'>
@@ -123,7 +124,7 @@ const NavbarSection = () =>{
                     </React.Fragment>
                 )
             }
-            else if(data.data.role==="Recruiter"){
+            else if(currentUserData.data.role==="Recruiter"){
                 return(
                     <React.Fragment>
                         <li className='listyle'>
@@ -249,7 +250,7 @@ const NavbarSection = () =>{
                     }
                 </div>
 
-                <ul className={`ulstyle ${openSidebar ? 'top-[64px] ':'top-[-250px]'}`}>
+                <ul className={`ulstyle ${openSidebar ? 'top-[64px] left-0 shadow-xl':'left-[-300px]'}`}>
                     {handleRoutes()}
                 </ul>
             </div>

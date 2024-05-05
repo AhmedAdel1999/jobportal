@@ -62,6 +62,7 @@
 
         "title":"title",
         "posting-date": "Date of posting",
+        "no-accepted":"No. of Aceepted",
         "no-apps": "No. of Applications",
         "no-positions": "No. of Positions",
         "options": "Options",
@@ -73,7 +74,7 @@
         "app-name": "Applicant Name",
         "app-date": "Date OF Application",
         "sop": "SOP",
-        "rating": "Rating",
+        "employee-rating": "Employee Rating",
         "soa": "Stage OF Application",
         "app-skills":"Skills",
         "app-education":"Education",
@@ -81,6 +82,7 @@
         "accept": "Accept",
         "reject": "Reject",
         "no-options": "NO Options Because You Are Rejected",
+        "accept-no-options": "You Are Accepted",
         "all-apps": "All OF Job Applicants",
         "no-apply": "No Body Apply For This Job Yet!!",
 
@@ -96,7 +98,7 @@
 
         "apply-job":"You Have Applied For Job Successfully",
         "recruiter-name":"Recruiter Name",
-        "recruiter-rate":"Recruiter Rating",
+        "job-rate":"Job Rating",
         "applied":"Applied",
         "apply":"Apply",
         "job-apply":"Apply job",
@@ -109,7 +111,7 @@
         "job-status": "Job Status",
         "rate-job":"Rating Job",
         "not-accepted-yet":"Not Accepted Yet",
-        "only-accepted":"Only Accepted can rate the job",
+        "only-accepted":"Only Accepted Can Rate The Job",
         "all-myjobs-apps":"All OF MY Jobs Applications",
         "have-no-apps":"You Have No Applications Yet",
 

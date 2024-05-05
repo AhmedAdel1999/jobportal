@@ -1,6 +1,6 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery,useQueryClient } from "@tanstack/react-query";
-import { getAppliedJobs, updateJob } from "../serveses/job";
+import { getAllJobs, updateJob } from "../serveses/job";
 import Loader from "../components/loding";
 import { Button, Modal,CircularProgress,Alert } from "@mui/material";
 import TableShared from "../components/tableshared";
@@ -10,18 +10,41 @@ const MYApplications = () =>{
 
     const [isOpen,setISOpen]=useState(false)
     const[jobID,setJobID]=useState(null)
+    const[AppliedJobs,setAppliedJobs] = useState([])
     const rating = useRef(0)
 
     const { t } = useTranslation()
     const queryClient = useQueryClient()
-    const {data:userData}=queryClient.getQueryData(["getuser"])
-    const{data:AppliedJobs,isPending,error,refetch} = useQuery({queryKey:["getAllAppliedJobs"],queryFn:()=>getAppliedJobs({jobIds: userData.jobsApplied})})
+    const {data:userData}=queryClient.getQueriesData({queryKey:["getuser"]})[0][1]
+    const {data:AllJobs,isLoading,error,refetch} = useQuery({queryKey:["getalljobs"],queryFn:getAllJobs})
     const{mutate:AddJobRate,isPending:isLoad,error:err} = useMutation({mutationFn:updateJob})
 
 
+
+    useEffect(()=>{
+      if(AllJobs){
+        let appliedJobs=[]
+        AllJobs.data.forEach((job)=>{
+            job.receivedApplicants.forEach((item)=>{
+                if(item.id===userData.id){
+                    appliedJobs.push(job)
+                }
+            })
+        })
+        setAppliedJobs([...appliedJobs])
+      }
+    },[AllJobs])
+
     const handleRate = (e) =>{
         e.preventDefault();
-        AddJobRate({id:jobID,data:{rating:rating.current.value}},{
+        let currentJob = AppliedJobs.filter((job)=>job.id===jobID)[0]
+        AddJobRate({
+            userId:currentJob.userId,
+            jobId:jobID,
+            data:{
+                ...currentJob,
+                rating:(Number(currentJob.rating)+Number(rating.current.value))/2
+            }},{
             onSuccess:()=>{
                 setISOpen(false)
                 refetch()
@@ -34,7 +57,7 @@ const MYApplications = () =>{
         "recruiter-name","job-status","rate-job"
     ]
 
-    const tableBody=AppliedJobs?.data.jobs.map((job)=>{
+    const tableBody=AppliedJobs?.map((job)=>{
         let applicant = job.receivedApplicants.filter((ele)=>ele.email==userData.email)[0]
         return{
            cell1:job.title,
@@ -54,13 +77,13 @@ const MYApplications = () =>{
                             disableElevation
                             onClick={()=>{
                                 setISOpen(true)
-                                setJobID(job._id)
+                                setJobID(job.id)
                             }}
                         >
                             {t("rate")}
                         </Button>
                         <Modal
-                            open={isOpen&&job._id==jobID}
+                            open={isOpen&&job.id==jobID}
                             onClose={()=>{setISOpen(false)}}
                         >
                         <div
@@ -98,7 +121,7 @@ const MYApplications = () =>{
     })
 
     
-    if(isPending){
+    if(isLoading){
         return <Loader />
     }
 
@@ -111,7 +134,7 @@ const MYApplications = () =>{
                     <Alert sx={{marginBottom:"16px",width:"fit-content"}} severity="error">{error?.message || err?.message}</Alert>
                 }
                 {
-                    AppliedJobs?.data?.jobs.length>0?
+                    AppliedJobs?.length>0?
                     <TableShared tableBody={tableBody} tableHeader={tableHeader} />
                     :
                     <Alert sx={{width:"fit-content"}} severity="info">{t("have-no-apps")}</Alert>

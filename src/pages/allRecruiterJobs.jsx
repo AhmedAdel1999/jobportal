@@ -1,13 +1,12 @@
 import React, { useRef, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { applyJob, getAllJobs } from "../serveses/job"
+import { applyJob, getAllJobs, updateJob } from "../serveses/job"
 import { Button,Alert, Modal,CircularProgress } from "@mui/material"
 import TableShared from "../components/tableshared"
 import { useToasts } from "react-toast-notifications"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faPaperPlane } from "@fortawesome/free-solid-svg-icons"
-import { addJobToUser } from "../serveses/user"
-import { getSingleJobs } from "../serveses/job"
+import { UpdateUser } from "../serveses/user"
 import { useTranslation } from "react-i18next";
 import Loader from "../components/loding"
 
@@ -21,43 +20,59 @@ const ALLRecruiterJobs = () =>{
     const queryClient = useQueryClient()
     const { t } = useTranslation();
     const { addToast:notify } = useToasts()
-    const {data:userData} = queryClient.getQueryData(["getuser"])
-    const {data:AllJobs,isPending,error,refetch} = useQuery({queryKey:["alljobs"],queryFn:getAllJobs})
-    const{mutate:ApplyForJob,isPending:isLoad,isSuccess,error:err}=useMutation({mutationFn:applyJob})
-    const {error:singlejoberror} = useQuery({queryKey:["getjob",jobID],queryFn:()=>getSingleJobs(jobID),enabled:isSuccess})
-    const{mutate:AddJobToUser}=useMutation({mutationFn:addJobToUser})
+
+    const {data:userData} = queryClient.getQueriesData({queryKey:["getuser"]})[0][1]
+    const {data:AllJobs,isLoading,error,refetch} = useQuery({queryKey:["getalljobs"],queryFn:getAllJobs})
+    const{mutate:ApplyForJob,isPending:isLoad,error:err}=useMutation({mutationFn:updateJob})
+    const{mutate:AddJobToUser}=useMutation({mutationFn:UpdateUser})
     const AvailableJobs=AllJobs?.data.filter((job)=>new Date(job.deadline).getTime() - Date.now()>0)
     
-
 
     const handleApply = (e) =>{
         e.preventDefault();
 
-        ApplyForJob({id:jobID,data:{
-            _id: userData._id,
-            email: userData.email,
-            sop: sop.current.value
+        let jobAppliedData = AvailableJobs.filter((job)=>job.id===jobID)[0]
+        ApplyForJob({userId:jobAppliedData.userId,jobId:jobID,
+            data:{
+                ...jobAppliedData,
+                receivedApplicants:[
+                    ...jobAppliedData.receivedApplicants,
+                    {
+                        id: userData.id,
+                        email: userData.email,
+                        sop: sop.current.value,
+                        status:"Applied",
+                        dateOfApplication:new Date()
+                    }
+                ]
         }},{
             onSuccess:async ()=>{
                 setISOpen(false)
                 notify(`You Have Applied For Job Successfully`,
                 {appearance: 'success',autoDismiss:"true"})
-                await AddJobToUser({id:userData._id,data:{_id:jobID}})
-                await refetch()
-                queryClient.refetchQueries({ queryKey: ['getuser'],exact:true,type:"all"})//,refetchInactive:true,exact:true
-                
+                await AddJobToUser({
+                    userId:userData.id,
+                    data:{
+                        ...userData,
+                        jobsApplied:[
+                            ...userData.jobsApplied,
+                            jobAppliedData.id
+                        ]
+                    }
+                })
+                await refetch()              
             }
         })
     }
 
 
     const tableHeader = [
-        "job-title","skills","recruiter-name","recruiter-rate","salary",
+        "job-title","skills","recruiter-name","job-rate","salary",
         "duration","deadline","options"
     ]
 
     const tableBody = AvailableJobs?.map((job)=>{
-        let checkApply = job.receivedApplicants.some((ele)=>ele._id==userData._id)
+        let checkApply = job.receivedApplicants.some((ele)=>ele.id==userData.id)
         return{
             cell1:job.title,
             cell2:job.skills.join(", "),
@@ -82,14 +97,14 @@ const ALLRecruiterJobs = () =>{
                                     disableElevation
                                     onClick={()=>{
                                         setISOpen(true)
-                                        setJobID(job._id)
+                                        setJobID(job.id)
                                     }}
                                     startIcon={<FontAwesomeIcon style={{margin:"0px"}} icon={faPaperPlane} />}
                                 >
                                     <span className="rtl:mx-2 rtl:font-[700]">{t("apply")}</span>
                                 </Button>
                                 <Modal
-                                 open={isOpen&&jobID==job._id}
+                                 open={isOpen&&jobID==job.id}
                                  onClose={()=>setISOpen(false)}
                                 >
                                     <div className="modalstyle"
@@ -128,7 +143,7 @@ const ALLRecruiterJobs = () =>{
     })
 
 
-    if(isPending){
+    if(isLoading){
         return <Loader />
     }
     return(

@@ -1,33 +1,25 @@
 import { fetchInstance } from "./constants"
 
-export const createNewJob = (data) =>{
-    return fetchInstance.post("Job/register",data)
+export const createNewJob = ({userId,data}) =>{
+    return fetchInstance.post(`users/${userId}/jobs/`,data)
+}
+
+export const getAllRecruiterJobs = (userId) =>{
+    return fetchInstance.get(`users/${userId}/jobs`)
 }
 
 export const getAllJobs = () =>{
-    return fetchInstance.get("Job")
+    return fetchInstance.get(`jobs`)
 }
 
-export const getSingleJobs = (id) =>{
-    return fetchInstance.get(`Job/getJob/${id}`)
+export const getSingleJob = (userId,jobId) =>{
+    return fetchInstance.get(`users/${userId}/jobs/${jobId}`)
 } 
 
-export const updateJob = ({id,data}) =>{
-    return fetchInstance.post(`Job/editJob/${id}`,data)
+export const updateJob = ({userId,jobId,data}) =>{
+    return fetchInstance.put(`users/${userId}/jobs/${jobId}`,data)
 }
 
-export const deleteJob = (id) =>{
-    return fetchInstance.post(`Job/deleteJob/${id}`)
+export const deleteJob = ({userId,jobId}) =>{
+    return fetchInstance.delete(`users/${userId}/jobs/${jobId}`)
 }
-
-export const updateJobStatus = ({id,data}) =>{
-    return fetchInstance.post(`Job/updateStatus/${id}`,data)
-}
-
-export const applyJob = ({id,data}) =>{
-    return fetchInstance.post(`job/addApp/${id}`,data)
-} 
-
-export const getAppliedJobs = (data) =>{
-    return fetchInstance.post(`job/getJobs`,data)
-} 

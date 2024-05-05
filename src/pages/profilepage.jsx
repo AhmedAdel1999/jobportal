@@ -13,12 +13,13 @@ import { AuthContext } from "../context/authcontext";
 
 
 const ProfilePage = () =>{
-    const {data:userdata,isPending:isLoadUser,refetch} = useQuery({queryKey:["getuser"],
-    queryFn:()=>getUser(JSON.parse(localStorage.getItem("token")))})
+    
+    const {data:currentUser,isPending:isLoadUser,refetch} = useQuery({queryKey:["getuser"],
+    queryFn:()=>getUser(JSON.parse(localStorage.getItem("currentUserId")))})
     const { addToast:notify } = useToasts()
     const { t } = useTranslation();
-    const {setUserData} = useContext(AuthContext)
 
+    const {setUserData} = useContext(AuthContext)
     const[contact,setContact] = useState({value:"",error:""})
     const[bio,setBio]=useState("")
     const[skills,setSkills] = useState([])
@@ -34,14 +35,14 @@ const ProfilePage = () =>{
     })
 
     useEffect(()=>{
-       if(userdata){
-        setContact({value:userdata.data.contact,error:""})
-        setBio(userdata.data.bio)
-        setSkills(userdata.data.skills)
-        setEducation(userdata.data.education)
-        setUserData(userdata)
+       if(currentUser){
+        setContact({value:currentUser.data.contact,error:""})
+        setBio(currentUser.data.bio)
+        setSkills(currentUser.data.skills)
+        setEducation(currentUser.data.education)
+        setUserData(currentUser)
        }
-    },[userdata])
+    },[currentUser])
 
     
 
@@ -61,7 +62,7 @@ const ProfilePage = () =>{
 
     const handleSubmit = (e) =>{
           e.preventDefault();
-          EditProfile({userId:userdata.data._id,data:{
+          EditProfile({userId:currentUser.data.id,data:{
             bio,
             contact:contact.value,
             education,
@@ -80,7 +81,7 @@ const ProfilePage = () =>{
                 <div className="mb-4">
                     <p className="font-bold text-xl text-base-4">
                         {t("hi")} 
-                       <span>{userdata?.data.name}!</span>
+                       <span>{currentUser?.data.name}!</span>
                     </p>
                     <p className="font-bold text-base-4">{t("current-details")}</p>
                 </div>
@@ -97,7 +98,7 @@ const ProfilePage = () =>{
                         <input 
                           className="inputstyle" 
                           type="text" 
-                          value={userdata.data.name} 
+                          value={currentUser?.data.name} 
                           disabled
                         />
                     </div>
@@ -107,7 +108,7 @@ const ProfilePage = () =>{
                         <input 
                           className="inputstyle placeholder:text-white" 
                           type="text" 
-                          value={userdata.data.email}
+                          value={currentUser?.data.email}
                           disabled
                         />
                     </div>
@@ -116,7 +117,7 @@ const ProfilePage = () =>{
                         <label className="font-bold text-base-4">{t("role")}</label>
                         <select 
                             className="inputstyle"
-                            value={userdata.data.role} 
+                            value={currentUser?.data.role} 
                             disabled
                         >
                             <option value="Aplicant">{t("aplicant")}</option>
@@ -124,7 +125,7 @@ const ProfilePage = () =>{
                         </select>
                     </div>
                     {
-                        userdata?.data.role==="Recruiter"?
+                        currentUser?.data.role==="Recruiter"?
                         (
                             <React.Fragment>
                                 <div className="flex flex-col gap-y-[5px]">

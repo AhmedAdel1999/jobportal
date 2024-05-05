@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import { CircularProgress,Alert } from "@mui/material";
-import { useMutation } from "@tanstack/react-query"
-import { userLogin } from "../serveses/auth";
+import { useQuery } from "@tanstack/react-query"
+import { getAllUsers } from "../serveses/user";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/authcontext";
 import { useTranslation } from "react-i18next";
@@ -9,36 +9,22 @@ import { useTranslation } from "react-i18next";
 
 const LoginPage = () =>{
 
+    const {data:AllUsers} = useQuery({queryKey:["getusers"],queryFn:getAllUsers})
     const { t } = useTranslation()
     const[email,setEmail] = useState({value:"",error:""})
     const[password,setPassword] = useState({value:"",error:""})
+    const [loading,setLoading] = useState(false)
+    const [error,setError] = useState(null)
 
     const {setIsLoggedIn} = useContext(AuthContext)
     const navigate = useNavigate()
-
-    const { mutate:LoginUser,data,isPending,isSuccess,error } = useMutation({mutationFn:userLogin})
-
    
-    useEffect(()=>{
-        if(isSuccess){
-            localStorage.setItem("token",JSON.stringify(data.data.token.split(" ")[1]))
-            setIsLoggedIn(true)
-            navigate("/myprofile")
-        }
-    },[isSuccess])
-
-
 
     const handleEmail = (e) =>{
         if(!e.target.value){
             setEmail({value:e.target.value,error:`${t("required")}`})
         }else{
-            let regexEmail = /^([0-9a-zA-Z]([-.\w]*[0-9a-zA-Z])*@([0-9a-zA-Z][-\w]*[0-9a-zA-Z]\.)+[a-zA-Z]{2,9})$/;
-            if(!e.target.value.match(regexEmail)){
-                setEmail({value:e.target.value,error:`${t("invalid-email")}`})
-            }else{
-                setEmail({value:e.target.value,error:""})
-            } 
+            setEmail({value:e.target.value,error:""})
         }   
     }
 
@@ -46,12 +32,7 @@ const LoginPage = () =>{
         if(!e.target.value){
             setPassword({value:e.target.value,error:`${t("required")}`})
         }else{
-            let regexPassword = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[0-9a-zA-Z]{8,}$/;
-            if(!e.target.value.match(regexPassword)){
-                setPassword({value:e.target.value,error:`${t("password-base")}`})
-            }else{
-                setPassword({value:e.target.value,error:""})
-            }
+            setPassword({value:e.target.value,error:""})
         }   
     }
 
@@ -61,7 +42,32 @@ const LoginPage = () =>{
             if(!email.value){setEmail({...email,error:`${t("required")}`})}
             if(!password.value){setPassword({...password,error:`${t("required")}`})}
         }else{
-            LoginUser({email:email.value,password:password.value})
+            setLoading(true)
+            let currentUserId
+            let isExist = false
+            try{
+                if(AllUsers.data.length){
+                    for(let i=0; i<AllUsers.data.length; i++){
+                        if(AllUsers.data[i].email===email.value && AllUsers.data[i].password===password.value){
+                            isExist=true
+                            currentUserId=AllUsers.data[i].id
+                            break;
+                        }
+                    }
+                    if(isExist){
+                        localStorage.setItem("currentUserId",JSON.stringify(currentUserId))
+                        setIsLoggedIn(true)
+                        navigate("/myprofile")
+                    }else{
+                    throw new Error("user not found or password don,t match")
+                    }
+                }else{
+                    throw new Error("User Not Found")
+                }
+            }catch(error){
+                setError(error.message)
+                setLoading(false)
+            }
         }
     }
 
@@ -72,7 +78,7 @@ const LoginPage = () =>{
                 {
                     error&&
                     <Alert sx={{marginBottom:"10px",width:"fit-content"}} severity="error">
-                        {error.response.data.error}
+                        {error}
                     </Alert>
                 }
                 <form onSubmit={handleSubmit} className="flex flex-col gap-y-3 pb-5">
@@ -108,7 +114,7 @@ const LoginPage = () =>{
                     >
                         <span className="mx-2">{t("login")}</span>
                         {
-                           isPending&&
+                           loading&&
                             <CircularProgress size={25} color="inherit" />
                         }
                     </button>

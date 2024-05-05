@@ -1,30 +1,20 @@
 import { fetchInstance } from "./constants"
 
-export const getUser = (token) =>{
-    return fetchInstance.get("user/me",{
-        headers:{
-            token:`${token}`
-        }
-    })
+export const userRegister = (data) =>{
+    return fetchInstance.post("users",data)
 }
 
-export const getAllUser = () =>{
-    return fetchInstance.get("user/")
+export const getUser = (userId) =>{
+    return fetchInstance.get(`users/${userId}`)
 }
+
+export const getAllUsers = () =>{
+    return fetchInstance.get("users")
+}
+
 
 export const UpdateUser = ({data,userId}) =>{
-    return fetchInstance.put(`user/editUser/${userId}`,data)
+    return fetchInstance.put(`users/${userId}`,data)
 }
 
-export const getUsersApplications = (data) =>{
-    return fetchInstance.post(`user/getApps`,data)
-}
-
-export const getApplicant = (id) =>{
-    return fetchInstance.get(`user/getApp/${id}`)
-}
-
-export const addJobToUser = ({id,data}) =>{
-    return fetchInstance.post(`user/addJob/${id}`,data)
-}
 
